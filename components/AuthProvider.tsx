@@ -4,7 +4,15 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from "react";
 import { getMe, logoutApi } from "@/service/auth.service";
 import { clearAuth } from "@/helper/authStorage";
-import type { AuthUser } from "@/types/auth.types";
+import { getHomePath } from "@/helper/navigation";
+import type { AuthUser, Role } from "@/types/auth.types";
+
+export type Portal = "admin" | "tenant";
+
+const PORTAL_ROLES: Record<Portal, readonly Role[]> = {
+  admin: ["SUPER_ADMIN", "OWNER"],
+  tenant: ["TENANT"],
+};
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -20,42 +28,46 @@ export const useAuth = (): AuthContextValue => {
   return ctx;
 };
 
-export default function AuthProvider({ children }: { children: ReactNode }) {
+interface AuthProviderProps {
+  portal: Portal;
+  children: ReactNode;
+}
+
+export default function AuthProvider({ portal, children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
 
-    const redirectToLogin = () => {
-      clearAuth();
-      window.location.href = "/login";
-    };
-
     getMe()
       .then((res) => {
         if (cancelled) return;
-        if (res.user.role === "TENANT") {
-          redirectToLogin();
+
+        // onno portal-er role hole nijer home-e pathao
+        if (!PORTAL_ROLES[portal].includes(res.user.role)) {
+          window.location.href = getHomePath(res.user.role);
           return;
         }
         setUser(res.user);
         setLoading(false);
       })
       .catch(() => {
-        if (!cancelled) redirectToLogin();
+        if (cancelled) return;
+        clearAuth();
+        window.location.href = "/login";
       });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [portal]);
 
   const logout = useCallback(async () => {
     try {
       await logoutApi();
     } catch {
-      
+      // API fail korleo local session muche felbo
     }
     clearAuth();
     window.location.href = "/login";

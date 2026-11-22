@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS, isNavActive } from "@/helper/navigation";
+import type { NavItem } from "@/helper/navigation";
 import { ROLE_LABELS } from "@/helper/constants";
 import type { AuthUser, Role } from "@/types/auth.types";
 
@@ -14,108 +17,160 @@ interface SidebarProps {
   onCloseMobile: () => void;
 }
 
-export default function Sidebar({ role, user, collapsed, mobileOpen, onCloseMobile }: SidebarProps) {
+type SectionTitle = "Overview" | "Management" | "Operations" | "Account" | "Menu";
+
+const SECTION_ORDER: readonly SectionTitle[] = [
+  "Overview",
+  "Management",
+  "Operations",
+  "Account",
+  "Menu",
+];
+
+const SECTION_BY_HREF: Record<string, SectionTitle> = {
+  "/dashboard": "Overview",
+  "/tenant": "Overview",
+
+  "/dashboard/owners": "Management",
+  "/dashboard/properties": "Management",
+  "/dashboard/stalls": "Management",
+  "/dashboard/tenants": "Management",
+
+  "/dashboard/agreements": "Operations",
+  "/dashboard/handovers": "Operations",
+  "/tenant/agreements": "Operations",
+  "/tenant/handover": "Operations",
+
+  "/dashboard/settings": "Account",
+  "/tenant/profile": "Account",
+};
+
+interface NavSection {
+  title: SectionTitle;
+  items: NavItem[];
+}
+
+const groupItems = (items: NavItem[]): NavSection[] =>
+  SECTION_ORDER.map((title) => ({
+    title,
+    items: items.filter((i) => (SECTION_BY_HREF[i.href] ?? "Menu") === title),
+  })).filter((section) => section.items.length > 0);
+
+const cx = (...c: Array<string | false | undefined>) => c.filter(Boolean).join(" ");
+
+export default function Sidebar({
+  role,
+  user,
+  collapsed,
+  mobileOpen,
+  onCloseMobile,
+}: SidebarProps) {
   const pathname = usePathname();
-  const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
-  const hideOnCollapsed = collapsed ? "md:hidden" : "";
+  const [logoFailed, setLogoFailed] = useState(false);
+
+  const sections = groupItems(NAV_ITEMS.filter((item) => item.roles.includes(role)));
 
   return (
     <>
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-[1px] md:hidden"
-          onClick={onCloseMobile}
-          aria-hidden="true"
-        />
-      )}
+      {mobileOpen && <div className="amp-overlay" onClick={onCloseMobile} aria-hidden="true" />}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-slate-900 text-slate-300 shadow-xl transition-all duration-300 md:translate-x-0 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        } ${collapsed ? "md:w-20" : "md:w-64"}`}
+        aria-label="Sidebar"
+        className={cx("amp-sb", collapsed && "is-collapsed", mobileOpen && "is-open")}
       >
         {/* Brand */}
-        <div
-          className={`flex h-16 items-center gap-3 border-b border-white/10 px-4 ${
-            collapsed ? "md:justify-center md:px-0" : ""
-          }`}
-        >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 text-white shadow-lg shadow-teal-500/30">
-            <i className="pi pi-file-edit text-lg" />
+        <div className="amp-sb__brand">
+          <div className="amp-sb__logo">
+            {logoFailed ? (
+              <span>AMP</span>
+            ) : (
+              <Image
+                src="/logo.png"
+                alt="AMP Technology"
+                width={28}
+                height={28}
+                priority
+                onError={() => setLogoFailed(true)}
+              />
+            )}
           </div>
-          <div className={`min-w-0 ${hideOnCollapsed}`}>
-            <p className="truncate text-sm font-bold leading-tight text-white">Agreement</p>
-            <p className="truncate text-[10px] uppercase tracking-widest text-teal-300">
-              Management System
-            </p>
+
+          <div className="amp-sb__brandtext amp-hide">
+            <p className="amp-sb__title">Agreement</p>
+            <p className="amp-sb__sub">Management</p>
           </div>
+
+          <button
+            type="button"
+            className="amp-sb__close"
+            onClick={onCloseMobile}
+            aria-label="Close menu"
+          >
+            <i className="pi pi-times" style={{ fontSize: 14 }} />
+          </button>
         </div>
 
-        {/* Menu */}
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          <p className={`px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500 ${hideOnCollapsed}`}>
-            Menu
-          </p>
+        {/* Navigation */}
+        <nav className="amp-sb__nav">
+          {sections.map((section, index) => (
+            <div key={section.title} className="amp-sb__section">
+              {index > 0 && <div className="amp-sb__divider" aria-hidden="true" />}
+              <p className="amp-sb__label amp-hide">{section.title}</p>
 
-          {items.map((item) => {
-            const active = isNavActive(pathname, item.href);
-            const base = `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-              collapsed ? "md:justify-center md:px-0" : ""
-            }`;
+              <ul className="amp-sb__list">
+                {section.items.map((item) => {
+                  const active = isNavActive(pathname, item.href);
 
-            const icon = (
-              <i
-                className={`pi ${item.icon} text-base ${
-                  active ? "text-white" : "text-slate-400 group-hover:text-teal-300"
-                }`}
-              />
-            );
+                  if (item.soon) {
+                    return (
+                      <li key={item.href}>
+                        <div
+                          aria-disabled="true"
+                          title={`${item.label} (coming soon)`}
+                          className="amp-sb__link is-disabled"
+                        >
+                          <span className="amp-sb__icon">
+                            <i className={`pi ${item.icon}`} />
+                          </span>
+                          <span className="amp-sb__text amp-hide">{item.label}</span>
+                          <span className="amp-sb__soon amp-hide">Soon</span>
+                        </div>
+                      </li>
+                    );
+                  }
 
-            if (item.soon) {
-              return (
-                <div
-                  key={item.href}
-                  aria-disabled="true"
-                  title={`${item.label} (coming soon)`}
-                  className={`${base} cursor-not-allowed text-slate-500`}
-                >
-                  <i className={`pi ${item.icon} text-base`} />
-                  <span className={`flex-1 truncate ${hideOnCollapsed}`}>{item.label}</span>
-                  <span className={`rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-400 ${hideOnCollapsed}`}>
-                    Soon
-                  </span>
-                </div>
-              );
-            }
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={item.label}
-                onClick={onCloseMobile}
-                className={`${base} ${
-                  active
-                    ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-900/30"
-                    : "hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                {icon}
-                <span className={`flex-1 truncate ${hideOnCollapsed}`}>{item.label}</span>
-              </Link>
-            );
-          })}
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        title={item.label}
+                        aria-current={active ? "page" : undefined}
+                        onClick={onCloseMobile}
+                        className={cx("amp-sb__link", active && "is-active")}
+                      >
+                        <span className="amp-sb__icon">
+                          <i className={`pi ${item.icon}`} />
+                        </span>
+                        <span className="amp-sb__text amp-hide">{item.label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
-        {/* User */}
-        <div className="border-t border-white/10 p-3">
-          <div className={`flex items-center gap-3 rounded-xl bg-white/5 p-2.5 ${collapsed ? "md:justify-center md:bg-transparent md:p-0" : ""}`}>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-500/20 text-sm font-bold uppercase text-teal-300">
+        {/* User card */}
+        <div className="amp-sb__user">
+          <div className="amp-sb__usercard">
+            <div className="amp-avatar">
               {user.name.charAt(0)}
+              <span className="amp-avatar__dot" />
             </div>
-            <div className={`min-w-0 ${hideOnCollapsed}`}>
-              <p className="truncate text-sm font-semibold text-white">{user.name}</p>
-              <p className="truncate text-[11px] text-slate-400">{ROLE_LABELS[user.role]}</p>
+            <div className="amp-sb__userinfo amp-hide">
+              <p className="amp-sb__username">{user.name}</p>
+              <p className="amp-sb__userrole">{ROLE_LABELS[user.role]}</p>
             </div>
           </div>
         </div>

@@ -7,9 +7,6 @@ import { DataTable } from "primereact/datatable";
 import type { DataTablePageEvent } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Dialog } from "primereact/dialog";
-import { InputText } from "primereact/inputtext";
-import { InputTextarea } from "primereact/inputtextarea";
-import { Button } from "primereact/button";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
 import { toast } from "react-toastify";
 import {
@@ -28,13 +25,11 @@ const ROWS_OPTIONS: number[] = [10, 20, 50];
 
 const EMPTY_FORM: CreateOwnerForm = { name: "", email: "", phone: "", address: "" };
 
+const cx = (...c: Array<string | false | undefined>) => c.filter(Boolean).join(" ");
+
 function StatusBadge({ active }: { active: boolean }) {
   return (
-    <span
-      className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-        active ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
-      }`}
-    >
+    <span className={cx("op-badge", active ? "op-badge--on" : "op-badge--off")}>
       {active ? "Active" : "Inactive"}
     </span>
   );
@@ -42,9 +37,9 @@ function StatusBadge({ active }: { active: boolean }) {
 
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-0">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-0.5 break-words text-sm font-medium text-slate-800">{value}</p>
+    <div className="op-detail">
+      <p className="op-detail__label">{label}</p>
+      <p className="op-detail__value">{value}</p>
     </div>
   );
 }
@@ -174,75 +169,123 @@ export default function OwnersPage() {
   };
 
   // ---------- table cells ----------
+  const indexCell = (_: Owner, opt: { rowIndex: number }) => (
+    <span className="op-idx">{(page - 1) * rows + opt.rowIndex + 1}</span>
+  );
+
   const nameCell = (o: Owner) => (
-    <div className="flex min-w-[180px] items-center gap-3">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-sm font-bold uppercase text-teal-600">
-        {o.name.charAt(0)}
-      </span>
-      <span className="truncate font-semibold text-slate-800">{o.name}</span>
+    <div className="op-owner">
+      <span className="op-avatar">{o.name.charAt(0)}</span>
+      <span className="op-owner__name">{o.name}</span>
     </div>
   );
 
   const contactCell = (o: Owner) => (
-    <div className="text-sm">
-      <p className="text-slate-700">{o.email}</p>
-      <p className="text-xs text-slate-500">{o.phone}</p>
+    <div className="op-contact">
+      <span className="op-contact__line">
+        <i className="pi pi-envelope" />
+        {o.email}
+      </span>
+      <span className="op-contact__line op-contact__line--muted">
+        <i className="pi pi-phone" />
+        {o.phone}
+      </span>
     </div>
   );
+
+  const addressCell = (o: Owner) => <span className="op-addr">{o.address}</span>;
+
+  const statusCell = (o: Owner) => <StatusBadge active={o.isActive} />;
+
+  const dateCell = (o: Owner) => <span className="op-date">{formatDate(o.createdAt)}</span>;
 
   const actionCell = (o: Owner) => (
-    <div className="flex gap-1.5">
-      <Button
-        icon="pi pi-eye"
-        rounded
-        text
-        severity="info"
-        tooltip="View"
-        tooltipOptions={{ position: "top" }}
+    <div className="op-actions">
+      <button
+        type="button"
+        className="op-iconbtn op-iconbtn--view"
+        title="View details"
+        aria-label={`View ${o.name}`}
         onClick={() => openView(o.id)}
-      />
-      <Button
-        icon={o.isActive ? "pi pi-ban" : "pi pi-check-circle"}
-        rounded
-        text
-        severity={o.isActive ? "danger" : "success"}
-        tooltip={o.isActive ? "Deactivate" : "Activate"}
-        tooltipOptions={{ position: "top" }}
+      >
+        <i className="pi pi-eye" />
+      </button>
+      <button
+        type="button"
+        className={cx("op-iconbtn", o.isActive ? "op-iconbtn--danger" : "op-iconbtn--success")}
+        title={o.isActive ? "Deactivate" : "Activate"}
+        aria-label={`${o.isActive ? "Deactivate" : "Activate"} ${o.name}`}
         onClick={() => confirmStatus(o)}
-      />
+      >
+        <i className={`pi ${o.isActive ? "pi-ban" : "pi-check-circle"}`} />
+      </button>
     </div>
   );
 
-  const fieldClass = (hasError: boolean) => `w-full ${hasError ? "p-invalid" : ""}`;
+  const emptyState = (
+    <div className="op-empty">
+      <span className="op-empty__icon">
+        <i className={`pi ${search ? "pi-search" : "pi-id-card"}`} />
+      </span>
+      <p className="op-empty__title">{search ? "No owners found" : "No owners yet"}</p>
+      <p className="op-empty__text">
+        {search
+          ? `Nothing matches "${search}". Try a different keyword.`
+          : "Click 'Add Owner' to create the first one."}
+      </p>
+    </div>
+  );
+
+  const inputClass = (hasError: boolean) => cx("op-input", hasError && "is-invalid");
 
   return (
-    <div className="space-y-4">
+    <div className="op">
       {/* Header */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-slate-800">Owners</h2>
-          <p className="text-sm text-slate-500">
-            {total} {search ? "found" : "total"}
-          </p>
+      <div className="op-head">
+        <div className="op-head__left">
+          <span className="op-head__icon">
+            <i className="pi pi-id-card" />
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <h2 className="op-head__title">Owners</h2>
+            <p className="op-head__sub">
+              <strong>{total}</strong> {search ? "found" : "total"}
+            </p>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <span className="relative">
-            <i className="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400" />
-            <InputText
+        <div className="op-head__right">
+          <div className="op-search">
+            <i className="pi pi-search" />
+            <input
+              type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search name, email, phone"
-              className="w-full pl-9 sm:w-72"
+              className="op-search__input"
               aria-label="Search owners"
             />
-          </span>
-          <Button label="Add Owner" icon="pi pi-plus" onClick={openCreate} />
+            {searchInput && (
+              <button
+                type="button"
+                className="op-search__clear"
+                onClick={() => setSearchInput("")}
+                aria-label="Clear search"
+              >
+                <i className="pi pi-times" />
+              </button>
+            )}
+          </div>
+
+          <button type="button" className="op-btn op-btn--primary" onClick={openCreate}>
+            <i className="pi pi-plus" />
+            Add Owner
+          </button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="op-card">
         <DataTable
           value={owners}
           lazy
@@ -255,14 +298,14 @@ export default function OwnersPage() {
           loading={loading}
           dataKey="id"
           responsiveLayout="scroll"
-          emptyMessage={search ? `No owner matches "${search}"` : "No owners yet. Click 'Add Owner' to create one."}
+          emptyMessage={emptyState}
         >
-          <Column header="#" body={(_: Owner, opt) => (page - 1) * rows + opt.rowIndex + 1} style={{ width: "55px" }} />
+          <Column header="#" body={indexCell} style={{ width: "56px" }} />
           <Column header="Owner" body={nameCell} />
           <Column header="Contact" body={contactCell} />
-          <Column header="Address" body={(o: Owner) => <span className="line-clamp-2 text-sm text-slate-600">{o.address}</span>} />
-          <Column header="Status" body={(o: Owner) => <StatusBadge active={o.isActive} />} />
-          <Column header="Created" body={(o: Owner) => formatDate(o.createdAt)} />
+          <Column header="Address" body={addressCell} />
+          <Column header="Status" body={statusCell} />
+          <Column header="Created" body={dateCell} />
           <Column header="Actions" body={actionCell} style={{ width: "110px" }} />
         </DataTable>
       </div>
@@ -273,45 +316,80 @@ export default function OwnersPage() {
         visible={createOpen}
         onHide={() => !submitting && setCreateOpen(false)}
         style={{ width: "min(94vw, 520px)" }}
+        className="op-dialog"
         draggable={false}
         dismissableMask={false}
       >
-        <form onSubmit={handleSubmit(onCreate)} className="space-y-4 pt-1" noValidate>
-          <div className="space-y-1.5">
-            <label htmlFor="o-name" className="text-sm font-semibold text-slate-700">
-              Full name <span className="text-red-500">*</span>
+        <form onSubmit={handleSubmit(onCreate)} className="op-form" noValidate>
+          <div className="op-field">
+            <label htmlFor="o-name" className="op-label">
+              Full name <span>*</span>
             </label>
-            <InputText id="o-name" {...register("name")} placeholder="e.g. Ram Das" className={fieldClass(!!errors.name)} />
-            {errors.name && <small className="text-red-500">{errors.name.message}</small>}
+            <input
+              id="o-name"
+              {...register("name")}
+              placeholder="e.g. Ram Das"
+              className={inputClass(!!errors.name)}
+            />
+            {errors.name && <small className="op-error">{errors.name.message}</small>}
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="o-email" className="text-sm font-semibold text-slate-700">
-              Email <span className="text-red-500">*</span>
+          <div className="op-field">
+            <label htmlFor="o-email" className="op-label">
+              Email <span>*</span>
             </label>
-            <InputText id="o-email" type="email" {...register("email")} placeholder="owner@example.com" className={fieldClass(!!errors.email)} />
-            {errors.email && <small className="text-red-500">{errors.email.message}</small>}
+            <input
+              id="o-email"
+              type="email"
+              {...register("email")}
+              placeholder="owner@example.com"
+              className={inputClass(!!errors.email)}
+            />
+            {errors.email && <small className="op-error">{errors.email.message}</small>}
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="o-phone" className="text-sm font-semibold text-slate-700">
-              Contact number <span className="text-red-500">*</span>
+          <div className="op-field">
+            <label htmlFor="o-phone" className="op-label">
+              Contact number <span>*</span>
             </label>
-            <InputText id="o-phone" inputMode="numeric" maxLength={10} {...register("phone")} placeholder="10 digit mobile number" className={fieldClass(!!errors.phone)} />
-            {errors.phone && <small className="text-red-500">{errors.phone.message}</small>}
+            <input
+              id="o-phone"
+              inputMode="numeric"
+              maxLength={10}
+              {...register("phone")}
+              placeholder="10 digit mobile number"
+              className={inputClass(!!errors.phone)}
+            />
+            {errors.phone && <small className="op-error">{errors.phone.message}</small>}
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="o-address" className="text-sm font-semibold text-slate-700">
-              Address <span className="text-red-500">*</span>
+          <div className="op-field">
+            <label htmlFor="o-address" className="op-label">
+              Address <span>*</span>
             </label>
-            <InputTextarea id="o-address" rows={3} {...register("address")} placeholder="Full address" className={fieldClass(!!errors.address)} />
-            {errors.address && <small className="text-red-500">{errors.address.message}</small>}
+            <textarea
+              id="o-address"
+              rows={3}
+              {...register("address")}
+              placeholder="Full address"
+              className={inputClass(!!errors.address)}
+            />
+            {errors.address && <small className="op-error">{errors.address.message}</small>}
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button type="button" label="Cancel" outlined severity="secondary" className="flex-1" disabled={submitting} onClick={() => setCreateOpen(false)} />
-            <Button type="submit" label={submitting ? "Creating..." : "Create Owner"} icon={submitting ? "pi pi-spin pi-spinner" : "pi pi-check"} className="flex-1" disabled={submitting} />
+          <div className="op-form__foot">
+            <button
+              type="button"
+              className="op-btn op-btn--ghost op-btn--block"
+              disabled={submitting}
+              onClick={() => setCreateOpen(false)}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="op-btn op-btn--primary op-btn--block" disabled={submitting}>
+              <i className={`pi ${submitting ? "pi-spin pi-spinner" : "pi-check"}`} />
+              {submitting ? "Creating..." : "Create Owner"}
+            </button>
           </div>
         </form>
       </Dialog>
@@ -322,32 +400,34 @@ export default function OwnersPage() {
         visible={viewOpen}
         onHide={() => setViewOpen(false)}
         style={{ width: "min(94vw, 560px)" }}
+        className="op-dialog"
         draggable={false}
         dismissableMask
       >
         {viewLoading || !viewOwner ? (
-          <div className="flex justify-center py-10">
-            <i className="pi pi-spin pi-spinner text-2xl text-teal-500" />
+          <div className="op-loading">
+            <i className="pi pi-spin pi-spinner" />
           </div>
         ) : (
-          <div className="space-y-5">
-            <div className="flex items-center gap-3">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 text-lg font-bold uppercase text-white">
-                {viewOwner.name.charAt(0)}
-              </span>
+          <div>
+            <div className="op-view__top">
+              <span className="op-avatar op-avatar--lg">{viewOwner.name.charAt(0)}</span>
               <div>
-                <p className="font-bold text-slate-800">{viewOwner.name}</p>
+                <p className="op-view__name">{viewOwner.name}</p>
                 <StatusBadge active={viewOwner.isActive} />
               </div>
             </div>
 
-            <div className="grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-2">
+            <div className="op-view__grid">
               <DetailItem label="Email" value={viewOwner.email} />
               <DetailItem label="Contact number" value={viewOwner.phone} />
-              <div className="sm:col-span-2">
+              <div className="op-view__full">
                 <DetailItem label="Address" value={viewOwner.address} />
               </div>
-              <DetailItem label="Email verified" value={viewOwner.isVerified ? "Yes" : "Not yet (verified on first login)"} />
+              <DetailItem
+                label="Email verified"
+                value={viewOwner.isVerified ? "Yes" : "Not yet (verified on first login)"}
+              />
               <DetailItem label="Last login" value={formatDateTime(viewOwner.lastLoginAt)} />
               <DetailItem label="Created by" value={viewOwner.createdBy?.name ?? "-"} />
               <DetailItem label="Created on" value={formatDate(viewOwner.createdAt)} />

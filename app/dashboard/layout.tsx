@@ -4,7 +4,7 @@ import DashboardShell from "@/components/DashboardShell";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <AuthProvider>
+    <AuthProvider portal="admin">
       <DashboardShell>{children}</DashboardShell>
     </AuthProvider>
   );

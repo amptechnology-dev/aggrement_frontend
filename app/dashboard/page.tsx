@@ -9,12 +9,42 @@ import { getErrorMessage } from "@/helper/apiError";
 import { formatDate } from "@/helper/format";
 import type { Owner } from "@/types/owner.types";
 
-const OWNER_ROADMAP: { title: string; description: string; icon: string }[] = [
-  { title: "Properties", description: "Add your market complexes with location and images", icon: "pi-building" },
-  { title: "Stalls", description: "Create rooms or stalls under each property", icon: "pi-shop" },
-  { title: "Tenants", description: "Register tenants and give them login access", icon: "pi-users" },
-  { title: "Agreements", description: "Create rent agreements with all terms", icon: "pi-file-edit" },
-  { title: "Handovers", description: "Record stall number, keys and handover date", icon: "pi-key" },
+const OWNER_ROADMAP: {
+  title: string;
+  description: string;
+  icon: string;
+  live?: boolean;
+}[] = [
+  {
+    title: "Properties",
+    description: "Add your market complexes with location and images",
+    icon: "pi-building",
+    live: true,
+  },
+  {
+    title: "Stalls",
+    description: "Create rooms or stalls under each property",
+    icon: "pi-shop",
+    live: true,
+  },
+  {
+    title: "Tenants",
+    description: "Register tenants and give them login access",
+    icon: "pi-users",
+    live: true,
+  },
+  {
+    title: "Agreements",
+    description: "Create rent agreements with all terms",
+    icon: "pi-file-edit",
+    live: true,
+  },
+  {
+    title: "Handovers",
+    description: "Record stall number, keys and handover date",
+    icon: "pi-key",
+    live: true,
+  },
 ];
 
 function SuperAdminHome() {
@@ -56,7 +86,10 @@ function SuperAdminHome() {
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-bold text-slate-800">Recently added owners</h2>
-          <Link href="/dashboard/owners" className="text-sm font-semibold text-teal-600 hover:text-teal-700">
+          <Link
+            href="/dashboard/owners"
+            className="text-sm font-semibold text-teal-600 hover:text-teal-700"
+          >
             View all
           </Link>
         </div>
@@ -72,25 +105,34 @@ function SuperAdminHome() {
         ) : (
           <ul className="divide-y divide-slate-100">
             {recent.map((o) => (
-              <li key={o.id} className="flex items-center justify-between gap-3 py-3">
+              <li
+                key={o.id}
+                className="flex items-center justify-between gap-3 py-3"
+              >
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 text-sm font-bold uppercase text-teal-600">
                     {o.name.charAt(0)}
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-800">{o.name}</p>
+                    <p className="truncate text-sm font-semibold text-slate-800">
+                      {o.name}
+                    </p>
                     <p className="truncate text-xs text-slate-500">{o.email}</p>
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                      o.isActive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+                      o.isActive
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-red-50 text-red-600"
                     }`}
                   >
                     {o.isActive ? "Active" : "Inactive"}
                   </span>
-                  <p className="mt-1 text-[11px] text-slate-400">{formatDate(o.createdAt)}</p>
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    {formatDate(o.createdAt)}
+                  </p>
                 </div>
               </li>
             ))}
@@ -114,16 +156,25 @@ function OwnerHome({ name }: { name: string }) {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {OWNER_ROADMAP.map((m) => (
-          <div key={m.title} className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div
+            key={m.title}
+            className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+          >
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
               <i className={`pi ${m.icon}`} />
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <p className="font-bold text-slate-800">{m.title}</p>
-                <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-600">
-                  Soon
-                </span>
+                {m.live ? (
+                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-600">
+                    Live
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-600">
+                    Soon
+                  </span>
+                )}
               </div>
               <p className="mt-1 text-sm text-slate-500">{m.description}</p>
             </div>
@@ -137,5 +188,9 @@ function OwnerHome({ name }: { name: string }) {
 export default function DashboardPage() {
   const { user } = useAuth();
   if (!user) return null;
-  return user.role === "SUPER_ADMIN" ? <SuperAdminHome /> : <OwnerHome name={user.name} />;
+  return user.role === "SUPER_ADMIN" ? (
+    <SuperAdminHome />
+  ) : (
+    <OwnerHome name={user.name} />
+  );
 }

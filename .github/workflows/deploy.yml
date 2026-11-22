@@ -1,4 +1,4 @@
-name: Deploy Estore Frontend
+name: Deploy Agreement Frontend
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - master
 
 concurrency:
-  group: deploy-estore-frontend
+  group: deploy-agreement-frontend
   cancel-in-progress: false
 
 env:
@@ -69,13 +69,13 @@ jobs:
           command_timeout: 10m
           script: |
             set -e
-            cd /root/estore_frontend
+            cd /root/agreement_frontend
             git pull --ff-only origin master
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f
             for i in $(seq 1 15); do
-              code=$(curl -s -o /dev/null -w "%{http_code}" https://estore.amptechnology.in/login || true)
+              code=$(curl -s -o /dev/null -w "%{http_code}" https://agreement.amptechnology.in/login || true)
               if [ "$code" = "200" ]; then echo "health check OK"; exit 0; fi
               sleep 2
             done

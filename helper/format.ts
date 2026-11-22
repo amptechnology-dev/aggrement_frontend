@@ -17,3 +17,10 @@ export const formatDateTime = (iso?: string | null): string => {
     minute: "2-digit",
   });
 };
+
+export const formatMoney = (amount: number): string =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2,
+  }).format(amount);
