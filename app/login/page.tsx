@@ -133,7 +133,7 @@ export default function LoginPage() {
 
         {step === "email" && (
           <>
-            <h1 className="lg-title">Welcome back</h1>
+            <h1 className="lg-title">Welcome back in Our Application</h1>
             <p className="lg-desc">
               Enter your registered email. We will send a one-time password.
             </p>
