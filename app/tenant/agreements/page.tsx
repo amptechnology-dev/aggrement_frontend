@@ -65,7 +65,9 @@ export default function TenantAgreementsPage() {
               <i className="pi pi-file-edit" />
             </span>
             <p className="op-empty__title">No agreements found</p>
-            <p className="op-empty__text">Your agreements will appear here once created.</p>
+            <p className="op-empty__text">
+              Your agreements will appear here once created.
+            </p>
           </div>
         </div>
       ) : (
@@ -95,7 +97,9 @@ export default function TenantAgreementsPage() {
                 </div>
                 <div className="tp-stat">
                   <p className="tp-stat__label">Deposit</p>
-                  <p className="tp-stat__value">{formatMoney(a.depositAmount)}</p>
+                  <p className="tp-stat__value">
+                    {formatMoney(a.depositAmount)}
+                  </p>
                 </div>
                 <div className="tp-stat tp-stat--full">
                   <p className="tp-stat__label">Validity</p>
@@ -114,6 +118,17 @@ export default function TenantAgreementsPage() {
                   <i className="pi pi-eye" />
                   View details
                 </button>
+                {a.pdfUrl && (
+                  <a
+                    href={a.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="op-btn op-btn--outline op-btn--sm"
+                  >
+                    <i className="pi pi-file-pdf" />
+                    PDF
+                  </a>
+                )}
               </div>
             </div>
           ))}

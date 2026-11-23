@@ -55,6 +55,7 @@ export interface Agreement extends AgreementRules {
   terminatedAt: string | null;
   terminationReason: string | null;
   owner: AgreementOwner | null;
+  pdfUrl: string | null;
   createdAt: string;
 }
 

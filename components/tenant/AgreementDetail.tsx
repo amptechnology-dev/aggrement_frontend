@@ -11,8 +11,12 @@ interface DetailItemProps {
 function DetailItem({ label, value }: DetailItemProps) {
   return (
     <div className="min-w-0">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-0.5 break-words text-sm font-medium text-slate-800">{value}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+        {label}
+      </p>
+      <p className="mt-0.5 break-words text-sm font-medium text-slate-800">
+        {value}
+      </p>
     </div>
   );
 }
@@ -21,12 +25,27 @@ interface AgreementDetailProps {
   agreement: Agreement;
 }
 
-export default function AgreementDetail({ agreement: a }: AgreementDetailProps) {
+export default function AgreementDetail({
+  agreement: a,
+}: AgreementDetailProps) {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
         <TenantAgreementBadge agreement={a} />
-        <span className="text-sm text-slate-500">Dated {formatDate(a.agreementDate)}</span>
+        <span className="text-sm text-slate-500">
+          Dated {formatDate(a.agreementDate)}
+        </span>
+        {a.pdfUrl && (
+          <a
+            href={a.pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold text-teal-700 hover:bg-slate-50"
+          >
+            <i className="pi pi-file-pdf" />
+            View PDF
+          </a>
+        )}
       </div>
 
       <section>
@@ -36,31 +55,57 @@ export default function AgreementDetail({ agreement: a }: AgreementDetailProps) 
           <DetailItem label="Office address" value={a.office.address} />
           <DetailItem label="Tenant" value={a.tenant.name} />
           <DetailItem
-            label={a.tenant.guardianRelation === "HUSBAND" ? "Husband's name" : "Father's name"}
+            label={
+              a.tenant.guardianRelation === "HUSBAND"
+                ? "Husband's name"
+                : "Father's name"
+            }
             value={a.tenant.guardianName}
           />
           <DetailItem label="Voter card no" value={a.tenant.voterCardNo} />
-          <DetailItem label="Contact" value={`${a.tenant.phone} | ${a.tenant.email}`} />
+          <DetailItem
+            label="Contact"
+            value={`${a.tenant.phone} | ${a.tenant.email}`}
+          />
           <div className="sm:col-span-2">
             <DetailItem label="Tenant address" value={a.tenant.address} />
           </div>
           <DetailItem label="Stall" value={`Stall ${a.stall.stallNo}`} />
           <DetailItem label="Market complex" value={a.stall.propertyName} />
           <div className="sm:col-span-2">
-            <DetailItem label="Market address" value={a.stall.propertyAddress} />
+            <DetailItem
+              label="Market address"
+              value={a.stall.propertyAddress}
+            />
           </div>
-          {a.owner && <DetailItem label="Owner contact" value={`${a.owner.name} | ${a.owner.phone}`} />}
+          {a.owner && (
+            <DetailItem
+              label="Owner contact"
+              value={`${a.owner.name} | ${a.owner.phone}`}
+            />
+          )}
         </div>
       </section>
 
       <section>
-        <h4 className="mb-2 text-sm font-bold text-slate-800">Rent and rules</h4>
+        <h4 className="mb-2 text-sm font-bold text-slate-800">
+          Rent and rules
+        </h4>
         <div className="grid gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
-          <DetailItem label="Monthly rent (start)" value={formatMoney(a.monthlyRent)} />
+          <DetailItem
+            label="Monthly rent (start)"
+            value={formatMoney(a.monthlyRent)}
+          />
           <DetailItem label="Current rent" value={formatMoney(a.currentRent)} />
           <DetailItem label="Deposit" value={formatMoney(a.depositAmount)} />
-          <DetailItem label="Effective from" value={formatDate(a.effectiveFrom)} />
-          <DetailItem label="Valid till" value={`${formatDate(a.endDate)} (${a.validityYears} years)`} />
+          <DetailItem
+            label="Effective from"
+            value={formatDate(a.effectiveFrom)}
+          />
+          <DetailItem
+            label="Valid till"
+            value={`${formatDate(a.endDate)} (${a.validityYears} years)`}
+          />
           <DetailItem
             label="Rent increase"
             value={
@@ -73,26 +118,39 @@ export default function AgreementDetail({ agreement: a }: AgreementDetailProps) 
             label="Late fine"
             value={`${formatMoney(a.lateFineAmountPerDay)} per day after the ${a.lateFineAfterDay}th of every month`}
           />
-          <DetailItem label="Stall cannot be closed for" value={`${a.stallCannotCloseForDays} days`} />
-          <DetailItem label="Notice period" value={`${a.noticePeriodMonths} month(s)`} />
+          <DetailItem
+            label="Stall cannot be closed for"
+            value={`${a.stallCannotCloseForDays} days`}
+          />
+          <DetailItem
+            label="Notice period"
+            value={`${a.noticePeriodMonths} month(s)`}
+          />
         </div>
       </section>
 
       {a.schedule && (
         <section>
-          <h4 className="mb-2 text-sm font-bold text-slate-800">Rent schedule</h4>
+          <h4 className="mb-2 text-sm font-bold text-slate-800">
+            Rent schedule
+          </h4>
           <RentScheduleTable periods={a.schedule} />
         </section>
       )}
 
       <section>
-        <h4 className="mb-2 text-sm font-bold text-slate-800">Terms and conditions</h4>
+        <h4 className="mb-2 text-sm font-bold text-slate-800">
+          Terms and conditions
+        </h4>
         {a.terms.length === 0 ? (
           <p className="text-sm text-slate-400">No additional terms.</p>
         ) : (
           <ol className="space-y-2">
             {a.terms.map((t, i) => (
-              <li key={`${i}-${t.slice(0, 10)}`} className="flex gap-2 rounded-lg border border-slate-200 p-2.5 text-sm">
+              <li
+                key={`${i}-${t.slice(0, 10)}`}
+                className="flex gap-2 rounded-lg border border-slate-200 p-2.5 text-sm"
+              >
                 <span className="font-bold text-teal-600">{i + 1}.</span>
                 <span className="whitespace-pre-line text-slate-700">{t}</span>
               </li>

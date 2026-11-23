@@ -32,7 +32,8 @@ const STATUS_OPTIONS: StatusOption[] = [
   { label: "Expired", value: "EXPIRED" },
 ];
 
-const cx = (...c: Array<string | false | undefined>) => c.filter(Boolean).join(" ");
+const cx = (...c: Array<string | false | undefined>) =>
+  c.filter(Boolean).join(" ");
 
 function StatusBadge({ agreement }: { agreement: Agreement }) {
   let text = "Active";
@@ -200,7 +201,9 @@ export default function AgreementsPage() {
     <span className="op-cell__title">{a.owner?.name ?? "-"}</span>
   );
 
-  const rentCell = (a: Agreement) => <span className="op-money">{formatMoney(a.currentRent)}</span>;
+  const rentCell = (a: Agreement) => (
+    <span className="op-money">{formatMoney(a.currentRent)}</span>
+  );
 
   const validityCell = (a: Agreement) => (
     <div className="op-cell" style={{ minWidth: 120 }}>
@@ -213,6 +216,18 @@ export default function AgreementsPage() {
 
   const actionCell = (a: Agreement) => (
     <div className="op-actions">
+      {a.pdfUrl && (
+        <a
+          href={a.pdfUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="op-iconbtn op-iconbtn--view"
+          title="Open PDF"
+          aria-label={`Open PDF of ${a.agreementNo}`}
+        >
+          <i className="pi pi-file-pdf" />
+        </a>
+      )}
       <button
         type="button"
         className="op-iconbtn op-iconbtn--view"
@@ -243,7 +258,9 @@ export default function AgreementsPage() {
       <span className="op-empty__icon">
         <i className={`pi ${hasFilter ? "pi-search" : "pi-file-edit"}`} />
       </span>
-      <p className="op-empty__title">{hasFilter ? "No agreements found" : "No agreements yet"}</p>
+      <p className="op-empty__title">
+        {hasFilter ? "No agreements found" : "No agreements yet"}
+      </p>
       <p className="op-empty__text">
         {hasFilter
           ? "Nothing matches your filters. Try a different keyword or status."
@@ -313,7 +330,11 @@ export default function AgreementsPage() {
           </div>
 
           {canManage && (
-            <button type="button" className="op-btn op-btn--primary" onClick={() => setFormOpen(true)}>
+            <button
+              type="button"
+              className="op-btn op-btn--primary"
+              onClick={() => setFormOpen(true)}
+            >
               <i className="pi pi-plus" />
               Create Agreement
             </button>
@@ -344,7 +365,11 @@ export default function AgreementsPage() {
           <Column header="Current rent" body={rentCell} />
           <Column header="Validity" body={validityCell} />
           <Column header="Status" body={statusCell} />
-          <Column header="Actions" body={actionCell} style={{ width: "110px" }} />
+          <Column
+            header="Actions"
+            body={actionCell}
+            style={{ width: "110px" }}
+          />
         </DataTable>
       </div>
 
@@ -375,6 +400,17 @@ export default function AgreementsPage() {
               <div className="op-view__meta">
                 <StatusBadge agreement={viewing} />
                 <span>Dated {formatDate(viewing.agreementDate)}</span>
+                {viewing.pdfUrl && (
+                  <a
+                    href={viewing.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="op-btn op-btn--outline op-btn--sm"
+                  >
+                    <i className="pi pi-file-pdf" />
+                    View PDF
+                  </a>
+                )}
               </div>
               {canManage && viewing.status === "ACTIVE" && (
                 <button
@@ -390,9 +426,9 @@ export default function AgreementsPage() {
 
             {viewing.isExpired && viewing.status === "ACTIVE" && (
               <div className="op-alert">
-                The agreement period is over but it is still active. Terminate it to free the
-                stall, or create a new agreement for the stall (this one will then be marked
-                expired automatically).
+                The agreement period is over but it is still active. Terminate
+                it to free the stall, or create a new agreement for the stall
+                (this one will then be marked expired automatically).
               </div>
             )}
 
@@ -400,21 +436,46 @@ export default function AgreementsPage() {
               <h4 className="op-section__title">Parties</h4>
               <div className="op-view__grid">
                 <DetailItem label="Office" value={viewing.office.name} />
-                <DetailItem label="Office address" value={viewing.office.address} />
+                <DetailItem
+                  label="Office address"
+                  value={viewing.office.address}
+                />
                 <DetailItem label="Tenant" value={viewing.tenant.name} />
                 <DetailItem
-                  label={viewing.tenant.guardianRelation === "HUSBAND" ? "Husband's name" : "Father's name"}
+                  label={
+                    viewing.tenant.guardianRelation === "HUSBAND"
+                      ? "Husband's name"
+                      : "Father's name"
+                  }
                   value={viewing.tenant.guardianName}
                 />
-                <DetailItem label="Voter card no" value={viewing.tenant.voterCardNo} />
-                <DetailItem label="Contact" value={`${viewing.tenant.phone} | ${viewing.tenant.email}`} />
+                <DetailItem
+                  label="Voter card no"
+                  value={viewing.tenant.voterCardNo}
+                />
+                <DetailItem
+                  label="Contact"
+                  value={`${viewing.tenant.phone} | ${viewing.tenant.email}`}
+                />
                 <div className="op-view__full">
-                  <DetailItem label="Tenant address" value={viewing.tenant.address} />
+                  <DetailItem
+                    label="Tenant address"
+                    value={viewing.tenant.address}
+                  />
                 </div>
-                <DetailItem label="Stall" value={`Stall ${viewing.stall.stallNo}`} />
-                <DetailItem label="Market complex" value={viewing.stall.propertyName} />
+                <DetailItem
+                  label="Stall"
+                  value={`Stall ${viewing.stall.stallNo}`}
+                />
+                <DetailItem
+                  label="Market complex"
+                  value={viewing.stall.propertyName}
+                />
                 <div className="op-view__full">
-                  <DetailItem label="Market address" value={viewing.stall.propertyAddress} />
+                  <DetailItem
+                    label="Market address"
+                    value={viewing.stall.propertyAddress}
+                  />
                 </div>
               </div>
             </section>
@@ -422,10 +483,22 @@ export default function AgreementsPage() {
             <section className="op-section">
               <h4 className="op-section__title">Rent and rules</h4>
               <div className="op-view__grid op-view__grid--3">
-                <DetailItem label="Monthly rent (start)" value={formatMoney(viewing.monthlyRent)} />
-                <DetailItem label="Current rent" value={formatMoney(viewing.currentRent)} />
-                <DetailItem label="Deposit" value={formatMoney(viewing.depositAmount)} />
-                <DetailItem label="Effective from" value={formatDate(viewing.effectiveFrom)} />
+                <DetailItem
+                  label="Monthly rent (start)"
+                  value={formatMoney(viewing.monthlyRent)}
+                />
+                <DetailItem
+                  label="Current rent"
+                  value={formatMoney(viewing.currentRent)}
+                />
+                <DetailItem
+                  label="Deposit"
+                  value={formatMoney(viewing.depositAmount)}
+                />
+                <DetailItem
+                  label="Effective from"
+                  value={formatDate(viewing.effectiveFrom)}
+                />
                 <DetailItem
                   label="Valid till"
                   value={`${formatDate(viewing.endDate)} (${viewing.validityYears} years)`}
@@ -433,7 +506,8 @@ export default function AgreementsPage() {
                 <DetailItem
                   label="Rent increase"
                   value={
-                    viewing.rentIncreaseEveryYears > 0 && viewing.rentIncreasePercent > 0
+                    viewing.rentIncreaseEveryYears > 0 &&
+                    viewing.rentIncreasePercent > 0
                       ? `${viewing.rentIncreasePercent}% every ${viewing.rentIncreaseEveryYears} years`
                       : "None"
                   }
@@ -446,7 +520,10 @@ export default function AgreementsPage() {
                   label="Stall cannot be closed for"
                   value={`${viewing.stallCannotCloseForDays} days`}
                 />
-                <DetailItem label="Notice period" value={`${viewing.noticePeriodMonths} month(s)`} />
+                <DetailItem
+                  label="Notice period"
+                  value={`${viewing.noticePeriodMonths} month(s)`}
+                />
               </div>
             </section>
 
@@ -476,8 +553,12 @@ export default function AgreementsPage() {
             {viewing.status !== "ACTIVE" && (
               <div className="op-endnote">
                 {viewing.status === "TERMINATED" ? "Terminated" : "Expired"}
-                {viewing.terminatedAt ? ` on ${formatDateTime(viewing.terminatedAt)}` : ""}
-                {viewing.terminationReason ? `: ${viewing.terminationReason}` : ""}
+                {viewing.terminatedAt
+                  ? ` on ${formatDateTime(viewing.terminatedAt)}`
+                  : ""}
+                {viewing.terminationReason
+                  ? `: ${viewing.terminationReason}`
+                  : ""}
               </div>
             )}
           </div>
@@ -497,8 +578,8 @@ export default function AgreementsPage() {
           <div>
             <p className="op-text">
               <b>{terminating.agreementNo}</b> ({terminating.tenant.name}, Stall{" "}
-              {terminating.stall.stallNo}) will be ended and the stall becomes vacant. This cannot
-              be undone.
+              {terminating.stall.stallNo}) will be ended and the stall becomes
+              vacant. This cannot be undone.
             </p>
 
             <div className="op-field">
@@ -531,7 +612,9 @@ export default function AgreementsPage() {
                 disabled={terminateBusy}
                 onClick={confirmTerminate}
               >
-                <i className={`pi ${terminateBusy ? "pi-spin pi-spinner" : "pi-ban"}`} />
+                <i
+                  className={`pi ${terminateBusy ? "pi-spin pi-spinner" : "pi-ban"}`}
+                />
                 {terminateBusy ? "Terminating..." : "Terminate"}
               </button>
             </div>
